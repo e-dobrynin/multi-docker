@@ -1,0 +1,25 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jd2050/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jd2050/react-test npm test
+
+after_success:
+  - docker-build -t jd2050/multi-client ./client
+  - docker-build -t jd2050/multi-nginx ./nginx
+  - docker-build -t jd2050/multi-server ./server
+  - docker-build -t jd2050/multi-worker ./worker
+
+  #Log in to docker-cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  #Push images to docker-hub
+  - docker push jd2050/multi-client
+  - docker push jd2050/multi-nginx
+  - docker push jd2050/multi-server
+  - docker push jd2050/multi-worker
